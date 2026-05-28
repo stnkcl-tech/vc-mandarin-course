@@ -29,17 +29,17 @@ def generate_mock_questions(
     if config_dict.get("includeSpeaking"):
         speaking_prompts = [
             {
-                "prompt": f"Introduce yourself in Mandarin. Mention your name, nationality, and one hobby. Use the grammar point: 是 (shì).\n\nContext: {day_context}",
+                "prompt": f"Introduce yourself in Mandarin. Mention your name, nationality, and one hobby. Use the grammar point: 是 (shì).",
                 "tips": ["Use 我是… to introduce yourself", "Mention at least 3 pieces of information", "Speak clearly and at natural pace"],
                 "explanation": "A strong self-introduction uses 我是 [name], 我是 [nationality]人, and 我喜欢 [hobby]. Keep tones clear and speak at natural pace.",
             },
             {
-                "prompt": f"Describe your daily routine from morning to evening. Include at least 4 different activities with specific times.\n\nContext: {day_context}",
+                "prompt": f"Describe your daily routine from morning to evening. Include at least 4 different activities with specific times.",
                 "tips": ["Use time expressions: 早上, 中午, 晚上", "Connect activities with 然后, 以后", "Minimum target: 5–6 sentences"],
                 "explanation": "Daily routines flow best with time markers: 早上七点我起床，然后洗澡，以后吃早饭. Use 然后 for sequence and 以后 for 'after that'.",
             },
             {
-                "prompt": f"Talk about your family. Mention at least 3 family members, their relationship to you, and one fact about each person.\n\nContext: {day_context}",
+                "prompt": f"Talk about your family. Mention at least 3 family members, their relationship to you, and one fact about each person.",
                 "tips": ["Use 的 after pronouns: 我的妈妈, 他的工作", "Include ages or occupations if you know them", "Minimum target: 4–5 sentences"],
                 "explanation": "Family descriptions rely on 的 as a possessive particle: 我的妈妈 is 'my mother'. Mentioning age (今年…岁) or job (他是医生) adds detail.",
             },
@@ -126,7 +126,7 @@ def generate_mock_questions(
             "id": next_id(),
             "type": "writing-essay",
             "section": "Essay Composition",
-            "prompt": f"Topic: Write about your best friend (150–200 characters)\n\nContext: Review material from {day_context}",
+            "prompt": f"Topic: Write about your best friend (150–200 characters)",
             "sourceDay": random.choice(selected_days) if selected_days else 1,
             "topic": "Write about your best friend",
             "minChars": 150,

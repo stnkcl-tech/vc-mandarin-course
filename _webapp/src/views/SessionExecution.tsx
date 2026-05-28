@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, SkipForward, Pause, Mic, CheckCircle, BookOpen, BookText, PenTool } from 'lucide-react';
 import { useAppStore } from '../stores/appStore';
 import { CURRICULUM_MODULES } from '../types';
@@ -11,6 +11,8 @@ interface FeedbackData {
   yourAnswer: string;
   correctAnswer?: string;
   explanation: string;
+  userText?: string;
+  userImageData?: string;
 }
 
 function computeFeedback(question: Question, value: Answer['value'], skipped: boolean): FeedbackData {
@@ -42,6 +44,7 @@ function computeFeedback(question: Question, value: Answer['value'], skipped: bo
         yourAnswer: hasDrawing ? 'Character drawn' : 'No drawing',
         correctAnswer: `${question.character} (${question.pinyin}) — ${question.meaning}`,
         explanation: question.explanation || `The correct character is ${question.character} (${question.pinyin}), meaning "${question.meaning}".`,
+        userImageData: hasDrawing ? (value as any).imageData : '',
       };
     }
     case 'speaking': {
@@ -58,6 +61,7 @@ function computeFeedback(question: Question, value: Answer['value'], skipped: bo
         status: charCount >= question.minChars ? 'submitted' : 'incorrect',
         yourAnswer: `${charCount} characters`,
         explanation: question.explanation || `A strong essay should be ${question.minChars}–${question.maxChars} characters and include all requirements.`,
+        userText: text,
       };
     }
     default:
@@ -86,6 +90,20 @@ export default function SessionExecution() {
       setSessionStatus('active');
     }
   }, [currentSession?.status, setSessionStatus]);
+
+  // Reset all local state when a new session starts
+  useEffect(() => {
+    if (currentSession) {
+      setCurrentIndex(0);
+      setLocalAnswer('');
+      setIsRecording(false);
+      setShowHint(false);
+      setCanvasData('');
+      setSessionComplete(false);
+      setPhase('summary');
+      setFeedback(null);
+    }
+  }, [currentSession?.id]);
 
   if (!currentSession || currentSession.questions.length === 0) {
     return (
@@ -139,12 +157,33 @@ export default function SessionExecution() {
   }
 
   const question = currentSession.questions[currentIndex];
+
+  // Defensive: if question is missing (shouldn't happen, but prevents crash)
+  if (!question) {
+    return (
+      <div className="animate-fade-in-up text-center py-24">
+        <div className="text-6xl mb-4">⚠️</div>
+        <h2 className="text-h2 mb-2">Question Not Found</h2>
+        <p className="text-body mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+          Something went wrong loading this question. Try going back to the dashboard.
+        </p>
+        <button
+          onClick={() => setCurrentView('dashboard')}
+          className="px-6 py-3 rounded-full text-button text-white transition-all duration-200 hover:scale-[1.02]"
+          style={{ backgroundColor: 'var(--color-accent)' }}
+        >
+          Back to Dashboard
+        </button>
+      </div>
+    );
+  }
+
   const totalQuestions = currentSession.questions.length;
   const progress = ((currentIndex + 1) / totalQuestions) * 100;
   const answeredCount = currentSession.answers.filter(a => !a.skipped).length;
   const isFeedback = phase === 'feedback';
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = () => {
     if (!question) return;
 
     let value: Answer['value'] = localAnswer;
@@ -160,17 +199,17 @@ export default function SessionExecution() {
     const fb = computeFeedback(question, value, false);
     setFeedback(fb);
     setPhase('feedback');
-  }, [question, localAnswer, canvasData, submitAnswer]);
+  };
 
-  const handleSkip = useCallback(() => {
+  const handleSkip = () => {
     if (!question) return;
     submitAnswer(question.id, null, true);
     const fb = computeFeedback(question, null, true);
     setFeedback(fb);
     setPhase('feedback');
-  }, [question, submitAnswer]);
+  };
 
-  const handleContinue = useCallback(() => {
+  const handleContinue = () => {
     setLocalAnswer('');
     setCanvasData('');
     setShowHint(false);
@@ -184,9 +223,9 @@ export default function SessionExecution() {
       setSessionComplete(true);
       setPhase('complete');
     }
-  }, [currentIndex, totalQuestions, completeSession]);
+  };
 
-  const handlePrevious = useCallback(() => {
+  const handlePrevious = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
       setLocalAnswer('');
@@ -195,7 +234,7 @@ export default function SessionExecution() {
       setFeedback(null);
       setPhase('question');
     }
-  }, [currentIndex]);
+  };
 
   return (
     <div className="animate-fade-in-up" style={{ maxWidth: 896, margin: '0 auto', width: '100%' }}>
@@ -300,7 +339,7 @@ export default function SessionExecution() {
 
       {/* Feedback Card */}
       {isFeedback && feedback && (
-        <FeedbackCard feedback={feedback} onContinue={handleContinue} isLast={currentIndex === totalQuestions - 1} />
+        <FeedbackCard feedback={feedback} question={question} onContinue={handleContinue} isLast={currentIndex === totalQuestions - 1} />
       )}
 
       {/* Navigation Buttons */}
@@ -477,7 +516,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function FeedbackCard({ feedback, onContinue, isLast }: { feedback: FeedbackData; onContinue: () => void; isLast: boolean }) {
+function FeedbackCard({ feedback, question, onContinue, isLast }: { feedback: FeedbackData; question: Question; onContinue: () => void; isLast: boolean }) {
   const config = {
     correct: { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Correct ✅', icon: <CheckCircle size={20} /> },
     incorrect: { color: 'var(--color-error)', bg: 'var(--color-error-bg)', label: 'Incorrect ❌', icon: <SkipForward size={20} /> },
@@ -499,22 +538,134 @@ function FeedbackCard({ feedback, onContinue, isLast }: { feedback: FeedbackData
         <span className="text-h3" style={{ color: config.color }}>{config.label}</span>
       </div>
 
-      <div className="space-y-3 mb-6">
-        <div className="flex items-start gap-2">
-          <span className="text-caption font-medium shrink-0" style={{ color: 'var(--color-text-secondary)', minWidth: 100 }}>Your answer:</span>
-          <span className="text-body-small">{feedback.yourAnswer}</span>
-        </div>
+      <div className="space-y-4 mb-6">
+        {/* Reading / Objective: compact summary */}
+        {question.type === 'reading' && (
+          <>
+            <div className="flex items-start gap-2">
+              <span className="text-caption font-medium shrink-0" style={{ color: 'var(--color-text-secondary)', minWidth: 100 }}>Your answer:</span>
+              <span className="text-body-small">{feedback.yourAnswer}</span>
+            </div>
+            {feedback.correctAnswer && (
+              <div className="flex items-start gap-2">
+                <span className="text-caption font-medium shrink-0" style={{ color: 'var(--color-text-secondary)', minWidth: 100 }}>Correct:</span>
+                <span className="text-body-small font-medium" style={{ color: 'var(--color-success)' }}>{feedback.correctAnswer}</span>
+              </div>
+            )}
+          </>
+        )}
 
-        {feedback.correctAnswer && (
-          <div className="flex items-start gap-2">
-            <span className="text-caption font-medium shrink-0" style={{ color: 'var(--color-text-secondary)', minWidth: 100 }}>Correct:</span>
-            <span className="text-body-small font-medium" style={{ color: 'var(--color-success)' }}>{feedback.correctAnswer}</span>
+        {/* Essay: show full text + checklist */}
+        {question.type === 'writing-essay' && feedback.userText && (
+          <div className="space-y-3">
+            <div>
+              <span className="text-caption font-medium" style={{ color: 'var(--color-text-secondary)' }}>Your essay:</span>
+              <div
+                className="mt-2 p-4 rounded-xl text-body-small max-h-48 overflow-y-auto"
+                style={{ backgroundColor: 'var(--color-bg-primary)', border: '1px solid var(--color-border)' }}
+              >
+                {feedback.userText || <em style={{ color: 'var(--color-text-secondary)' }}>No text submitted.</em>}
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-caption" style={{ color: 'var(--color-text-secondary)' }}>
+                {feedback.userText.length} / {question.minChars} min characters
+              </span>
+              {feedback.userText.length < question.minChars && (
+                <span className="text-caption font-medium" style={{ color: 'var(--color-error)' }}>Below minimum</span>
+              )}
+              {feedback.userText.length > question.maxChars && (
+                <span className="text-caption font-medium" style={{ color: 'var(--color-error)' }}>Above maximum</span>
+              )}
+            </div>
+            {question.requirements.length > 0 && (
+              <div>
+                <span className="text-caption font-medium" style={{ color: 'var(--color-text-secondary)' }}>Self-checklist:</span>
+                <ul className="mt-2 space-y-1">
+                  {question.requirements.map((req, i) => (
+                    <li key={i} className="text-body-small flex items-start gap-2" style={{ color: 'var(--color-text-secondary)' }}>
+                      <span>☐</span> {req}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
-        <div className="flex items-start gap-2">
-          <span className="text-caption font-medium shrink-0" style={{ color: 'var(--color-text-secondary)', minWidth: 100 }}>Explanation:</span>
-          <span className="text-body-small">{feedback.explanation}</span>
+        {/* Character: show drawing vs correct */}
+        {question.type === 'writing-character' && (
+          <div className="space-y-3">
+            {feedback.userImageData && (
+              <div className="flex flex-col sm:flex-row gap-4 items-center">
+                <div className="text-center">
+                  <span className="text-caption block mb-2" style={{ color: 'var(--color-text-secondary)' }}>Your drawing</span>
+                  <img src={feedback.userImageData} alt="Your character" className="rounded-xl border" style={{ borderColor: 'var(--color-border)', width: 120, height: 120, objectFit: 'contain', backgroundColor: '#fff' }} />
+                </div>
+                <div className="text-center">
+                  <span className="text-caption block mb-2" style={{ color: 'var(--color-text-secondary)' }}>Correct</span>
+                  <div className="rounded-xl border flex items-center justify-center" style={{ borderColor: 'var(--color-border)', width: 120, height: 120, backgroundColor: '#fff' }}>
+                    <span className="text-display" style={{ color: '#000' }}>{question.character}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            {!feedback.userImageData && (
+              <div className="text-body-small" style={{ color: 'var(--color-error)' }}>No drawing submitted.</div>
+            )}
+            <div className="flex items-center gap-4 text-body-small">
+              <span><strong>Pinyin:</strong> {question.pinyin}</span>
+              <span><strong>Meaning:</strong> {question.meaning}</span>
+              <span><strong>Strokes:</strong> {question.strokeCount}</span>
+            </div>
+            {question.etymology && (
+              <div className="text-body-small" style={{ color: 'var(--color-text-secondary)' }}>
+                📖 <strong>Memory aid:</strong> {question.etymology}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Speaking: self-assessment rubric */}
+        {question.type === 'speaking' && (
+          <div className="space-y-3">
+            <div className="text-body-small">
+              <strong>Prompt:</strong> {question.prompt}
+            </div>
+            {question.rubric && question.rubric.length > 0 && (
+              <div>
+                <span className="text-caption font-medium" style={{ color: 'var(--color-text-secondary)' }}>Self-assessment checklist:</span>
+                <ul className="mt-2 space-y-1">
+                  {question.rubric.map((item, i) => (
+                    <li key={i} className="text-body-small flex items-start gap-2" style={{ color: 'var(--color-text-secondary)' }}>
+                      <span>☐</span> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {question.tips && question.tips.length > 0 && (
+              <div>
+                <span className="text-caption font-medium" style={{ color: 'var(--color-text-secondary)' }}>Tips for next time:</span>
+                <ul className="mt-2 space-y-1">
+                  {question.tips.map((tip, i) => (
+                    <li key={i} className="text-body-small flex items-start gap-2" style={{ color: 'var(--color-text-secondary)' }}>
+                      <span>•</span> {tip}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Explanation for all types */}
+        <div
+          className="p-4 rounded-xl"
+          style={{ backgroundColor: 'var(--color-bg-primary)', border: '1px solid var(--color-border)' }}
+        >
+          <span className="text-caption font-medium" style={{ color: 'var(--color-text-secondary)' }}>💡 Explanation:</span>
+          <p className="text-body-small mt-1">{feedback.explanation}</p>
         </div>
       </div>
 
@@ -561,14 +712,6 @@ function SpeakingQuestionUI({ question, isRecording, setIsRecording, readOnly }:
 
   return (
     <div className="space-y-4">
-      <div
-        className="p-4 rounded-xl"
-        style={{ backgroundColor: 'var(--color-bg-primary)', border: '1px solid var(--color-border)' }}
-      >
-        <div className="text-body-small font-medium mb-3">📋 Prompt</div>
-        <p className="text-body">{question.prompt}</p>
-      </div>
-
       {/* Recording UI */}
       <div
         className={`flex flex-col items-center gap-4 p-6 rounded-xl ${readOnly ? 'opacity-50 pointer-events-none' : ''}`}
@@ -736,7 +879,7 @@ function WritingCharacterUI({ question, canvasRef, canvasData, setCanvasData, sh
       if (!ctx) return;
       isDrawingRef.current = true;
       ctx.beginPath();
-      ctx.strokeStyle = '#1D1D1F';
+      ctx.strokeStyle = '#000000';
       ctx.lineWidth = 3;
       ctx.lineCap = 'round';
       const rect = canvas.getBoundingClientRect();
@@ -873,12 +1016,13 @@ function WritingCharacterUI({ question, canvasRef, canvasData, setCanvasData, sh
             onMouseLeave={stopDrawing}
             className={`rounded-lg cursor-crosshair ${readOnly ? 'pointer-events-none' : ''}`}
             style={{
+              backgroundColor: '#FFFFFF',
               backgroundImage: `
-                linear-gradient(to right, var(--color-border) 1px, transparent 1px),
-                linear-gradient(to bottom, var(--color-border) 1px, transparent 1px)
+                linear-gradient(to right, #E5E5EA 1px, transparent 1px),
+                linear-gradient(to bottom, #E5E5EA 1px, transparent 1px)
               `,
               backgroundSize: '80px 80px',
-              border: '2px solid var(--color-border)',
+              border: '2px solid #D1D1D6',
               touchAction: 'none',
             }}
           />

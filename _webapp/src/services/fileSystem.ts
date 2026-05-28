@@ -63,7 +63,7 @@ export async function scanContextWithHandle(): Promise<ContextStructure> {
       const masterFiles: ContextFile[] = [];
       // @ts-ignore
       for await (const [name, handle] of masterHandle.entries()) {
-        if (handle.kind === 'file') {
+        if (handle.kind === 'file' && !name.startsWith('.')) {
           const fileHandle = handle as FileSystemFileHandle;
           const file = await fileHandle.getFile();
           masterFiles.push({
@@ -152,7 +152,7 @@ export function scanFromFileList(files: FileList): ContextStructure {
   // Extract master files
   const masterFiles: ContextFile[] = [];
   for (const file of fileArray) {
-    if (file.webkitRelativePath.startsWith(masterPrefix)) {
+    if (file.webkitRelativePath.startsWith(masterPrefix) && !file.name.startsWith('.')) {
       const relName = file.webkitRelativePath.slice(masterPrefix.length);
       if (!relName.includes('/')) {
         masterFiles.push({
