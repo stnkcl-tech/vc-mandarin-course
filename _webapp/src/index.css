@@ -1,0 +1,260 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'SF Mono', 'Menlo', monospace;
+
+  /* Light Theme (Default) */
+  --color-bg-primary: #FFFFFF;
+  --color-bg-surface: #F5F5F7;
+  --color-text-primary: #1D1D1F;
+  --color-text-secondary: #6E6E73;
+  --color-accent: #FF6B6B;
+  --color-accent-hover: #FF8585;
+  --color-border: #E5E5EA;
+  --color-success: #34C759;
+  --color-success-bg: rgba(52, 199, 89, 0.08);
+  --color-warning: #FF9500;
+  --color-warning-bg: rgba(255, 149, 0, 0.08);
+  --color-error: #FF3B30;
+  --color-error-bg: rgba(255, 59, 48, 0.08);
+  --color-hover-surface: #EBEBF0;
+  --color-blue: #007AFF;
+  --color-blue-bg: rgba(0, 122, 255, 0.08);
+
+  /* Shadows */
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-button: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  /* Spacing Scale — using --space-* to avoid overriding Tailwind's --spacing-* */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
+
+  /* Radii */
+  --radius-card: 20px;
+  --radius-button: 9999px;
+  --radius-input: 12px;
+  --radius-item: 12px;
+}
+
+/* System Dark Mode */
+@media (prefers-color-scheme: dark) {
+  :root:not(.theme-light) {
+    --color-bg-primary: #1C1C1E;
+    --color-bg-surface: #2C2C2E;
+    --color-text-primary: #FFFFFF;
+    --color-text-secondary: #8E8E93;
+    --color-border: #38383A;
+    --color-success: #30D158;
+    --color-success-bg: rgba(48, 209, 88, 0.12);
+    --color-warning: #FF9F0A;
+    --color-warning-bg: rgba(255, 159, 10, 0.12);
+    --color-error: #FF453A;
+    --color-error-bg: rgba(255, 69, 58, 0.12);
+    --color-hover-surface: #3A3A3C;
+    --shadow-card: none;
+    --shadow-elevated: none;
+    --shadow-button: none;
+  }
+}
+
+/* Manual Theme Overrides */
+html.theme-light {
+  --color-bg-primary: #FFFFFF;
+  --color-bg-surface: #F5F5F7;
+  --color-text-primary: #1D1D1F;
+  --color-text-secondary: #6E6E73;
+  --color-border: #E5E5EA;
+  --color-success: #34C759;
+  --color-success-bg: rgba(52, 199, 89, 0.08);
+  --color-warning: #FF9500;
+  --color-warning-bg: rgba(255, 149, 0, 0.08);
+  --color-error: #FF3B30;
+  --color-error-bg: rgba(255, 59, 48, 0.08);
+  --color-hover-surface: #EBEBF0;
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-button: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+html.theme-dark {
+  --color-bg-primary: #1C1C1E;
+  --color-bg-surface: #2C2C2E;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #8E8E93;
+  --color-border: #38383A;
+  --color-success: #30D158;
+  --color-success-bg: rgba(48, 209, 88, 0.12);
+  --color-warning: #FF9F0A;
+  --color-warning-bg: rgba(255, 159, 10, 0.12);
+  --color-error: #FF453A;
+  --color-error-bg: rgba(255, 69, 58, 0.12);
+  --color-hover-surface: #3A3A3C;
+  --shadow-card: none;
+  --shadow-elevated: none;
+  --shadow-button: none;
+}
+
+html.theme-oled {
+  --color-bg-primary: #000000;
+  --color-bg-surface: #1C1C1E;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #8E8E93;
+  --color-border: #38383A;
+  --color-success: #30D158;
+  --color-success-bg: rgba(48, 209, 88, 0.12);
+  --color-warning: #FF9F0A;
+  --color-warning-bg: rgba(255, 159, 10, 0.12);
+  --color-error: #FF453A;
+  --color-error-bg: rgba(255, 69, 58, 0.12);
+  --color-hover-surface: #3A3A3C;
+  --shadow-card: none;
+  --shadow-elevated: none;
+  --shadow-button: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* Typography utilities */
+.text-display {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.text-h1 {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.text-h2 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.text-h3 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.text-body {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.text-body-small {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.text-caption {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+}
+.text-button {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 400ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-stagger > * {
+  opacity: 0;
+  animation: fadeInUp 400ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.animate-stagger > *:nth-child(2) { animation-delay: 100ms; }
+.animate-stagger > *:nth-child(3) { animation-delay: 200ms; }
+.animate-stagger > *:nth-child(4) { animation-delay: 300ms; }
+.animate-stagger > *:nth-child(5) { animation-delay: 400ms; }
+.animate-stagger > *:nth-child(6) { animation-delay: 500ms; }
+
+/* Focus rings */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #1D1D1F !important;
+  }
+  .card, .skill-card, .insight-card, .rec-card {
+    box-shadow: none !important;
+    border: 1px solid #E5E5EA !important;
+    break-inside: avoid;
+  }
+  .no-print { display: none !important; }
+  a { text-decoration: none !important; color: #1D1D1F !important; }
+  @page { margin: 20mm; size: A4; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

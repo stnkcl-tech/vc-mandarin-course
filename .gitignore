@@ -1,0 +1,119 @@
+# =============================================================================
+# Mandarin Mastery Review System — Root .gitignore
+# =============================================================================
+# This file keeps the repo "fork-clean": no user content, no secrets,
+# no build artifacts, no OS/editor droppings.
+#
+# After cloning, run:
+#   cd _webapp && npm install
+#   cd _backend && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt
+#   mkdir -p _context/master _context/supporting
+#   cp _backend/.env.example _backend/.env   # then fill in your API keys
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. USER CONTENT — Never commit personal learning materials
+# -----------------------------------------------------------------------------
+# Ignore all contents but keep the folder structure with .gitkeep
+_context/master/*
+_context/supporting/*
+!_context/master/.gitkeep
+!_context/supporting/.gitkeep
+
+# -----------------------------------------------------------------------------
+# 2. SECRETS & ENVIRONMENT
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# -----------------------------------------------------------------------------
+# 3. FRONTEND (_webapp/) — Node / Vite / React
+# -----------------------------------------------------------------------------
+_webapp/node_modules/
+_webapp/dist/
+_webapp/dist-ssr/
+_webapp/.vite/
+_webapp/*.local
+_webapp/coverage/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# -----------------------------------------------------------------------------
+# 4. BACKEND (_backend/) — Python / FastAPI
+# -----------------------------------------------------------------------------
+_backend/venv/
+_backend/__pycache__/
+_backend/**/*.py[cod]
+_backend/**/*$py.class
+_backend/**/*.so
+_backend/.Python
+_backend/build/
+_backend/develop-eggs/
+_backend/dist/
+_backend/downloads/
+_backend/eggs/
+_backend/.eggs/
+_backend/lib/
+_backend/lib64/
+_backend/parts/
+_backend/sdist/
+_backend/wheels/
+_backend/*.egg-info/
+_backend/.installed.cfg
+_backend/*.egg
+_backend/MANIFEST
+
+# Pytest / MyPy / Coverage
+_backend/.pytest_cache/
+_backend/.mypy_cache/
+_backend/.dmypy.json
+_backend/dmypy.json
+_backend/.coverage
+_backend/.coverage.*
+_backend/htmlcov/
+_backend/.tox/
+_backend/.nox/
+_backend/.cache/
+
+# -----------------------------------------------------------------------------
+# 5. OS & EDITOR DROPPINGS
+# -----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+*.sublime-project
+*.sublime-workspace
+
+# -----------------------------------------------------------------------------
+# 6. MISC
+# -----------------------------------------------------------------------------
+*.pem
+*.cert
+*.key
+.temp/
+.tmp/
